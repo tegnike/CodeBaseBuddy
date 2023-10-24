@@ -1,17 +1,11 @@
 import os
 from langchain.embeddings import OpenAIEmbeddings
-import langchain
 from annoy import AnnoyIndex
-from langchain.chat_models import ChatOpenAI
-from langchain.llms import OpenAI
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-from sentence_transformers import SentenceTransformer, util
+from sentence_transformers import SentenceTransformer
 import sys
 
 embeddings = OpenAIEmbeddings(openai_api_key="")
 model = SentenceTransformer('sentence-transformers/allenai-specter', device='cpu')
-
 
 ##name = "langchain"
 ##GITHUB_PATH = "/home/raghavan/langchain"
@@ -30,19 +24,18 @@ def get_files(path):
                 files.append(os.path.join(r, file))
     return files
 
-
 def get_file_embeddings(path):
     try:
         text = get_file_contents(path)
         ret = embeddings.embed_query(text)
         return ret
-    except:
+    except Exception as e:
+        print ("Error:", e)
         return None
 
 def get_file_contents(path):
     with open(path, 'r') as f:
         return f.read()
-
 
 print (name)
 print (GITHUB_PATH)
@@ -66,7 +59,6 @@ for file in files:
     if (i%100 == 0):
         print ("No of files processed: " + str(i))
 
-
 t = AnnoyIndex(1536, 'angular')
 t2 = AnnoyIndex(768, 'angular')
 index_map = {}
@@ -78,16 +70,15 @@ for file in embeddings_dict:
     i+=1
 
 t.build(len(files))
-name1= name + "_ada.ann"
+name1= 'annoys/' + name + "_ada.ann"
 t.save(name1)
 t2.build(len(files))
-name2 = name + "_specter.ann"
+name2 = 'annoys/' + name + "_specter.ann"
 t2.save(name2)
 
-with open('index_map' + name + '.txt', 'w') as f:
+with open('annoys/' + name + '_index_map' + '.txt', 'w') as f:
     for idx, path in index_map.items():
         f.write(f'{idx}\t{path}\n')
-
 
 print("Indices created :" + name1 + " , " + name2)
 print("Number of files indexed: " + str(len(files)))
